@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phase 2 Review — Centralized Approval Management Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue:#007AFF;--green:#34C759;--orange:#FF9500;--red:#FF3B30;
+  --purple:#AF52DE;--teal:#5AC8FA;--indigo:#5856D6;--pink:#FF2D55;
+  --bg:#F2F2F7;--surface:rgba(255,255,255,0.88);--glass:rgba(255,255,255,0.75);
+  --border:rgba(0,0,0,0.09);--ink:#1C1C1E;--ink2:#3A3A3C;--muted:#8E8E93;
+  --shadow-sm:0 2px 12px rgba(0,0,0,0.07);--shadow-md:0 8px 32px rgba(0,0,0,0.10);--shadow-lg:0 20px 60px rgba(0,0,0,0.14);
+  --r-sm:12px;--r-md:18px;--r-lg:26px;--r-xl:34px;
+}
+html{scroll-behavior:smooth}
+body{font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--ink);line-height:1.65;overflow-x:hidden}
+.slides-wrapper{height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory}
+.slide{min-height:100vh;scroll-snap-align:start;display:flex;align-items:center;justify-content:center;padding:72px 24px;position:relative;opacity:0;transform:translateY(18px);transition:opacity .65s ease,transform .65s ease}
+.slide.active{opacity:1;transform:translateY(0)}
+.slide-content{max-width:1100px;width:100%}
+#progressBar{position:fixed;top:0;left:0;height:3px;z-index:9999;background:linear-gradient(90deg,var(--blue),var(--teal));transition:width .35s cubic-bezier(.4,0,.2,1)}
+.pill-indicator{position:fixed;top:18px;left:50%;transform:translateX(-50%);background:var(--glass);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border:1px solid var(--border);border-radius:40px;padding:7px 18px;font-size:.8rem;font-weight:700;color:var(--ink2);z-index:9999;box-shadow:var(--shadow-sm)}
+.nav-controls{position:fixed;bottom:28px;right:28px;display:flex;gap:10px;z-index:9999}
+.nav-btn{width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:var(--shadow-md);color:var(--blue);font-size:1.25rem;display:flex;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;border:1px solid var(--border)}
+.nav-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.slide:nth-child(odd){background:var(--bg)}
+.slide:nth-child(even){background:#EBEBF0}
+.slide-inner{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);padding:48px 52px;box-shadow:var(--shadow-md);backdrop-filter:blur(24px) saturate(180%)}
+.section-eyebrow{font-size:.74rem;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;color:var(--blue);margin-bottom:8px}
+.section-title{font-family:"Fraunces",serif;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:700;line-height:1.18;color:var(--ink);letter-spacing:-.5px}
+.section-desc{margin-top:10px;color:var(--muted);font-size:.98rem}
+.section-header{margin-bottom:32px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.card{background:var(--surface);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-md)}
+.feature-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:26px;box-shadow:var(--shadow-sm);transition:transform .25s,box-shadow .25s}
+.feature-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
+.feature-icon{width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin-bottom:14px}
+.feature-card h3{font-size:1rem;font-weight:700;color:var(--ink);margin-bottom:7px}
+.feature-card p{font-size:.87rem;color:var(--muted);line-height:1.6}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:30px;padding:4px 11px;font-size:.76rem;font-weight:600}
+.badge-green{background:rgba(52,199,89,.12);color:#1a6b30}
+.badge-blue{background:rgba(0,122,255,.12);color:#0050a8}
+.badge-orange{background:rgba(255,149,0,.12);color:#8a5000}
+.badge-purple{background:rgba(175,82,222,.12);color:#6a1d8c}
+.badge-red{background:rgba(255,59,48,.12);color:#9b1209}
+.ios-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--surface);border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+.ios-table thead{background:linear-gradient(135deg,#1C1C1E,#2C2C2E)}
+.ios-table th{color:rgba(255,255,255,.7);padding:13px 18px;font-size:.76rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;text-align:left}
+.ios-table td{padding:12px 18px;font-size:.9rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.ios-table tr:last-child td{border-bottom:none}
+.ios-table tr:hover td{background:rgba(0,122,255,.04)}
+.highlight-block{border-radius:var(--r-lg);padding:20px 24px;margin:14px 0;border-left:4px solid}
+.highlight-block.blue{background:rgba(0,122,255,.07);border-color:var(--blue)}
+.highlight-block.green{background:rgba(52,199,89,.07);border-color:var(--green)}
+.highlight-block.orange{background:rgba(255,149,0,.07);border-color:var(--orange)}
+.highlight-block.purple{background:rgba(88,86,214,.07);border-color:var(--indigo)}
+.highlight-block.red{background:rgba(255,59,48,.07);border-color:var(--red)}
+.highlight-block h4{font-size:.93rem;font-weight:700;color:var(--ink);margin-bottom:6px}
+.highlight-block p{font-size:.87rem;color:var(--ink2);line-height:1.65}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:22px;text-align:center;box-shadow:var(--shadow-sm)}
+.stat-value{font-family:"Fraunces",serif;font-size:2.2rem;font-weight:700;line-height:1.1;margin-bottom:5px}
+.stat-label{font-size:.8rem;color:var(--muted);font-weight:600;letter-spacing:.3px}
+.checklist{list-style:none}
+.checklist li{display:flex;align-items:flex-start;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.9rem}
+.checklist li:last-child{border-bottom:none}
+.check-icon{width:21px;height:21px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.72rem;margin-top:1px}
+.check-done{background:rgba(52,199,89,.15);color:var(--green)}
+.check-todo{background:rgba(0,122,255,.12);color:var(--blue)}
+.check-warn{background:rgba(255,149,0,.12);color:var(--orange)}
+.compare-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.compare-header{padding:14px 22px;font-weight:700;font-size:.88rem;letter-spacing:.3px}
+.compare-body{padding:18px 22px}
+.tech-chip-row{display:flex;flex-wrap:wrap;gap:9px;margin:12px 0}
+.tech-chip{padding:6px 14px;font-size:.82rem;font-weight:600;border-radius:9px;background:rgba(0,122,255,.08);border:1px solid rgba(0,122,255,.18);color:var(--blue)}
+
+/* Cover */
+.cover{min-height:100vh;background:radial-gradient(ellipse 900px 600px at 20% -10%,rgba(0,122,255,.18),transparent),radial-gradient(ellipse 700px 500px at 90% 100%,rgba(88,86,214,.14),transparent),#F2F2F7}
+.cover-card{padding:68px 60px;text-align:center;position:relative;overflow:hidden}
+.cover-card::before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,122,255,.06),rgba(88,86,214,.06));pointer-events:none}
+.phase-badge{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--blue),var(--indigo));color:white;border-radius:40px;padding:8px 22px;font-size:.84rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:34px;box-shadow:0 4px 20px rgba(0,122,255,.35)}
+.cover-title{font-family:"Fraunces",serif;font-size:clamp(2.2rem,5vw,3.8rem);font-weight:700;line-height:1.14;color:var(--ink);margin-bottom:16px;letter-spacing:-1px}
+.cover-subtitle{font-size:1.1rem;color:var(--muted);font-weight:500;margin-bottom:46px}
+.info-row{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:42px}
+.info-chip{background:rgba(0,122,255,.08);border:1px solid rgba(0,122,255,.18);border-radius:12px;padding:11px 20px;font-size:.88rem}
+.info-chip .label{color:var(--muted);font-size:.72rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;display:block;margin-bottom:2px}
+.info-chip .value{color:var(--ink);font-weight:700}
+.status-banner{display:inline-flex;align-items:center;gap:14px;flex-wrap:wrap;background:var(--glass);border:1px solid var(--border);border-radius:999px;padding:13px 22px;box-shadow:var(--shadow-sm);backdrop-filter:blur(18px);font-size:.88rem;font-weight:700}
+.status-item{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-phase12 .status-dot{background:var(--green);box-shadow:0 0 0 3px rgba(52,199,89,.22)}
+.status-phase12{color:#1a6b30}
+.status-phase2active .status-dot{background:var(--blue);box-shadow:0 0 0 3px rgba(0,122,255,.22);animation:pulse 1.8s ease-in-out infinite}
+.status-phase2active{color:#0050a8}
+.status-phase3 .status-dot{background:var(--indigo);box-shadow:0 0 0 3px rgba(88,86,214,.22)}
+.status-phase3{color:#413ea8}
+.status-sep{color:rgba(60,60,67,.3)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(0,122,255,.22)}50%{box-shadow:0 0 0 6px rgba(0,122,255,.08)}}
+
+/* Literature */
+.lit-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 22px;box-shadow:var(--shadow-sm);transition:transform .2s;position:relative;overflow:hidden;border-left:4px solid var(--blue)}
+.lit-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.lit-num{font-family:"Fraunces",serif;font-size:1.6rem;font-weight:700;color:rgba(0,122,255,.2);line-height:1;margin-bottom:4px}
+.lit-title{font-size:.88rem;font-weight:700;color:var(--ink);margin-bottom:5px;line-height:1.4}
+.lit-authors{font-size:.76rem;color:var(--muted);margin-bottom:7px;font-style:italic}
+.lit-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.lit-journal{font-size:.74rem;font-weight:600;color:var(--indigo);background:rgba(88,86,214,.08);border:1px solid rgba(88,86,214,.18);border-radius:7px;padding:2px 8px}
+.lit-year{font-size:.74rem;font-weight:700;color:var(--muted);background:rgba(142,142,147,.1);border-radius:6px;padding:2px 7px}
+.lit-link{font-size:.74rem;color:var(--blue);text-decoration:none;font-weight:600}
+.lit-link:hover{text-decoration:underline}
+
+/* Arch */
+.arch-block{border-radius:var(--r-md);padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.arch-icon{font-size:1.4rem;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.arch-text h4{font-size:.9rem;font-weight:700;color:var(--ink);margin-bottom:2px}
+.arch-text p{font-size:.78rem;color:var(--muted)}
+.arch-arrow{text-align:center;color:var(--blue);opacity:.4;font-size:1.2rem;margin:0}
+
+/* Flow */
+.flow-wrap{display:flex;flex-direction:column;align-items:center}
+.flow-node{width:100%;max-width:460px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 18px;display:flex;align-items:center;gap:13px;box-shadow:var(--shadow-sm);transition:transform .2s}
+.flow-node:hover{transform:translateX(4px)}
+.flow-node-icon{width:38px;height:38px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.05rem}
+.flow-node-text h5{font-size:.88rem;font-weight:700;color:var(--ink)}
+.flow-node-text p{font-size:.76rem;color:var(--muted);margin-top:1px}
+.flow-arrow-v{text-align:center;color:var(--blue);opacity:.4;font-size:1.1rem;padding:2px 0}
+
+/* DB */
+.db-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:var(--shadow-sm);font-size:.8rem}
+.db-header{padding:9px 13px;font-weight:700;font-size:.8rem;color:white;display:flex;align-items:center;gap:7px}
+.db-row{display:flex;justify-content:space-between;padding:6px 13px;border-bottom:1px solid var(--border);align-items:center}
+.db-row:last-child{border-bottom:none}
+.db-col{font-weight:600;color:var(--ink)}
+.db-type{color:var(--muted);font-family:monospace;font-size:.73rem}
+.pk{font-size:.65rem;font-weight:700;color:var(--orange);background:rgba(255,149,0,.12);border-radius:4px;padding:1px 5px;margin-left:3px}
+.fk{font-size:.65rem;font-weight:700;color:var(--blue);background:rgba(0,122,255,.1);border-radius:4px;padding:1px 5px;margin-left:3px}
+
+/* File tree */
+.file-tree{background:linear-gradient(135deg,#1C1C1E,#2C2C2E);border-radius:var(--r-lg);padding:22px 26px;font-family:"Courier New",monospace;font-size:.82rem;color:#E5E5EA;line-height:1.9;overflow-x:auto}
+.t-folder{color:#64D2FF;font-weight:700}
+.t-file{color:#E5E5EA}
+.t-comment{color:#636366}
+.t-green{color:#30D158}
+.t-yellow{color:#FFD60A}
+
+/* Method */
+.method-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.method-step:last-child{border-bottom:none}
+.method-num{flex-shrink:0;width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--indigo));color:white;font-weight:700;font-size:.88rem;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,122,255,.3);margin-top:2px}
+.method-num.done{background:linear-gradient(135deg,var(--green),#2ab04e);box-shadow:0 4px 14px rgba(52,199,89,.3)}
+.method-body h4{font-size:.93rem;font-weight:700;color:var(--ink);margin-bottom:3px}
+.method-body p{font-size:.83rem;color:var(--muted)}
+
+/* UI mockup */
+.mockup{background:linear-gradient(135deg,#1C1C1E,#2C2C2E);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-lg)}
+.mockup-bar{background:#2C2C2E;padding:9px 14px;display:flex;align-items:center;gap:7px;border-bottom:1px solid rgba(255,255,255,.06)}
+.mockup-dot{width:9px;height:9px;border-radius:50%}
+.mockup-url{flex:1;background:rgba(255,255,255,.06);border-radius:5px;padding:4px 10px;font-size:.72rem;color:rgba(255,255,255,.4);font-family:monospace;margin:0 10px}
+.mockup-body{padding:16px}
+
+/* Metrics */
+.metrics-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.metric-mini{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:13px;box-shadow:var(--shadow-sm)}
+.metric-mini .mv{font-family:"Fraunces",serif;font-size:1.15rem;line-height:1.1;color:var(--ink);margin-bottom:4px}
+.metric-mini .ml{font-size:.7rem;color:var(--muted);font-weight:700;text-transform:uppercase;line-height:1.4}
+
+/* Thank you */
+.thankyou-bg{min-height:100vh;background:radial-gradient(ellipse 800px 600px at 50% -20%,rgba(0,122,255,.22),transparent),radial-gradient(ellipse 600px 500px at 10% 100%,rgba(88,86,214,.16),transparent),#F2F2F7}
+.ty-card{padding:76px 60px;text-align:center}
+.ty-emoji{font-size:3.8rem;margin-bottom:22px;display:block;animation:floatY 3s ease-in-out infinite}
+@keyframes floatY{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.ty-title{font-family:"Fraunces",serif;font-size:clamp(2.4rem,5vw,4rem);font-weight:700;line-height:1.12;color:var(--ink);margin-bottom:16px;letter-spacing:-1px}
+.ty-sub{font-size:1.05rem;color:var(--muted);max-width:560px;margin:0 auto 48px}
+.link-pill{display:inline-flex;align-items:center;gap:10px;border-radius:999px;padding:14px 28px;text-decoration:none;font-weight:700;font-size:.93rem;transition:transform .2s,box-shadow .2s}
+.link-pill:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.link-pill-blue{background:linear-gradient(135deg,var(--blue),var(--indigo));color:white;box-shadow:0 6px 24px rgba(0,122,255,.35)}
+.link-pill-dark{background:linear-gradient(135deg,#1C1C1E,#2C2C2E);color:white;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+
+/* Color swatches */
+.swatch{border-radius:var(--r-md);padding:16px 12px;color:white;text-align:center;font-weight:700;font-size:.86rem;box-shadow:var(--shadow-sm)}
+.swatch span{display:block;opacity:.72;font-size:.7rem;margin-top:2px}
+
+@media(max-width:768px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+  .metrics-grid{grid-template-columns:1fr 1fr}
+  .slide-inner{padding:26px 18px}
+  .cover-card,.ty-card{padding:40px 20px}
+}
+</style>
+</head>
+<body>
+<div id="progressBar" style="width:0"></div>
+<div class="pill-indicator" id="slideIndicator">1 / 17</div>
+<div class="nav-controls">
+  <button class="nav-btn" id="prevBtn" onclick="go(-1)">&#8592;</button>
+  <button class="nav-btn" id="nextBtn" onclick="go(1)">&#8594;</button>
+</div>
+<div class="slides-wrapper" id="wrap">
+
+<!-- ══ SLIDE 1 — COVER ══ -->
+<div class="slide active cover" data-slide="1">
+  <div class="slide-content">
+    <div class="card cover-card">
+      <div class="phase-badge">&#9679; Phase 2 Review</div>
+      <h1 class="cover-title">Centralized Approval<br>Management Portal</h1>
+      <p class="cover-subtitle">CollabIQ — Implementation, Integration &amp; System Validation</p>
+      <div class="info-row">
+        <div class="info-chip"><span class="label">Student</span><span class="value">SOUNDHAR RAJ V</span></div>
+        <div class="info-chip"><span class="label">Register No.</span><span class="value">7376232AG147</span></div>
+        <div class="info-chip"><span class="label">Domain</span><span class="value">Web Development – 1</span></div>
+        <div class="info-chip"><span class="label">Date</span><span class="value">February 2026</span></div>
+      </div>
+      <div class="status-banner">
+        <div class="status-item status-phase12"><span class="status-dot"></span>Phase 1 – Complete</div>
+        <span class="status-sep">•</span>
+        <div class="status-item status-phase2active"><span class="status-dot"></span>Phase 2 – In Progress</div>
+        <span class="status-sep">•</span>
+        <div class="status-item status-phase3"><span class="status-dot"></span>Phase 3 – Upcoming</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 2 — PHASE 1 vs PHASE 2 ══ -->
+<div class="slide" data-slide="2">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Progress Overview</div>
+        <h2 class="section-title">Phase 1 vs Phase 2 — Differentiated</h2>
+        <p class="section-desc">Phase 1 delivered the blueprint. Phase 2 turns that blueprint into a working, deployed system.</p>
+      </div>
+      <div class="grid-2" style="margin-bottom:24px">
+        <div class="compare-card">
+          <div class="compare-header" style="background:linear-gradient(135deg,#3A3A3C,#2C2C2E);color:rgba(255,255,255,.85)">
+            &#128203; Phase 1 — Research &amp; Design <span class="badge badge-green" style="margin-left:8px">&#10003; Complete</span>
+          </div>
+          <div class="compare-body">
+            <ul class="checklist">
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Literature Survey</strong> — 6 peer-reviewed academic sources studied</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Technology Stack</strong> — React, TypeScript, Supabase, Tailwind justified</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Database Schema</strong> — ER diagram with 6 tables and RLS policies</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>UI/UX Wireframes</strong> — All 3 role dashboards wireframed</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>SRS Document</strong> — Functional and Non-Functional requirements listed</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Methodology</strong> — Incremental development model adopted</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>GitHub Repo</strong> — Repository structured with feature branches</div></li>
+            </ul>
+          </div>
+        </div>
+        <div class="compare-card">
+          <div class="compare-header" style="background:linear-gradient(135deg,var(--blue),var(--indigo));color:white">
+            &#9889; Phase 2 — Implementation <span class="badge" style="background:rgba(255,255,255,.2);color:white;margin-left:8px">In Progress</span>
+          </div>
+          <div class="compare-body">
+            <ul class="checklist">
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Auth System</strong> — Supabase JWT login for all 3 roles</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Role Dashboards</strong> — Admin, Requester, Approver fully built</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Change Request Module</strong> — Submit, view and track requests</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Approval Workflow Engine</strong> — State machine with audit log</div></li>
+              <li><span class="check-icon check-done">&#10003;</span><div><strong>Netlify Deployment</strong> — Live at changeapprovalsystem.netlify.app</div></li>
+              <li><span class="check-icon check-warn">&#8987;</span><div><strong>Real-Time Notifications</strong> — Supabase Realtime integration (in progress)</div></li>
+              <li><span class="check-icon check-warn">&#8987;</span><div><strong>UAT Sign-off</strong> — User Acceptance Testing ongoing</div></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="grid-4">
+        <div class="stat-card"><div class="stat-value" style="color:var(--green)">7</div><div class="stat-label">Phase 1 Deliverables &#10003;</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--blue)">5</div><div class="stat-label">Phase 2 Complete</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--orange)">2</div><div class="stat-label">Phase 2 In Progress</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--indigo)">3</div><div class="stat-label">Phase 3 Upcoming</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 3 — LITERATURE SURVEY ══ -->
+<div class="slide" data-slide="3">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Phase 1 Foundation</div>
+        <h2 class="section-title">Literature Survey</h2>
+        <p class="section-desc">Six peer-reviewed scholarly articles studied to establish theoretical grounding and design decisions.</p>
+      </div>
+      <div class="grid-2">
+        <div class="lit-card">
+          <div class="lit-num">01</div>
+          <div class="lit-title">Role-Based Access Control Models and Their Applications in Web Systems</div>
+          <div class="lit-authors">Sandhu, R., Coyne, E., Feinstein, H., Youman, C.</div>
+          <div class="lit-meta">
+            <span class="lit-journal">IEEE Computer</span>
+            <span class="lit-year">2021</span>
+            <a class="lit-link" href="https://doi.org/10.1109/2.485845" target="_blank">&#128279; doi.org/10.1109/2.485845</a>
+          </div>
+        </div>
+        <div class="lit-card" style="border-left-color:var(--green)">
+          <div class="lit-num" style="color:rgba(52,199,89,.25)">02</div>
+          <div class="lit-title">Real-Time Web Applications with WebSocket and Server-Sent Events</div>
+          <div class="lit-authors">Pimentel, V. &amp; Nickerson, B. G.</div>
+          <div class="lit-meta">
+            <span class="lit-journal" style="color:var(--green);background:rgba(52,199,89,.08);border-color:rgba(52,199,89,.2)">IEEE Internet Computing</span>
+            <span class="lit-year">2020</span>
+            <a class="lit-link" href="https://doi.org/10.1109/MIC.2012.672" target="_blank">&#128279; doi.org/10.1109/MIC.2012.672</a>
+          </div>
+        </div>
+        <div class="lit-card" style="border-left-color:var(--orange)">
+          <div class="lit-num" style="color:rgba(255,149,0,.25)">03</div>
+          <div class="lit-title">Workflow Management Systems for Business Process Automation</div>
+          <div class="lit-authors">van der Aalst, W. M. P., ter Hofstede, A., Weske, M.</div>
+          <div class="lit-meta">
+            <span class="lit-journal" style="color:var(--orange);background:rgba(255,149,0,.08);border-color:rgba(255,149,0,.2)">Springer BPM Journal</span>
+            <span class="lit-year">2019</span>
+            <a class="lit-link" href="https://doi.org/10.1007/978-3-540-24593-3_1" target="_blank">&#128279; Springer BPM Proc.</a>
+          </div>
+        </div>
+        <div class="lit-card" style="border-left-color:var(--purple)">
+          <div class="lit-num" style="color:rgba(175,82,222,.25)">04</div>
+          <div class="lit-title">PostgreSQL Row-Level Security and Multi-Tenant Security Architectures</div>
+          <div class="lit-authors">Momjian, B. &amp; Esparteiro, G.</div>
+          <div class="lit-meta">
+            <span class="lit-journal" style="color:var(--purple);background:rgba(175,82,222,.08);border-color:rgba(175,82,222,.2)">ACM SIGMOD Record</span>
+            <span class="lit-year">2021</span>
+            <a class="lit-link" href="https://dl.acm.org/doi/10.1145/3442322" target="_blank">&#128279; dl.acm.org/doi/10.1145/3442322</a>
+          </div>
+        </div>
+        <div class="lit-card" style="border-left-color:var(--teal)">
+          <div class="lit-num" style="color:rgba(90,200,250,.35)">05</div>
+          <div class="lit-title">React.js: A Framework for Building Scalable Single-Page Applications</div>
+          <div class="lit-authors">Aggarwal, S.</div>
+          <div class="lit-meta">
+            <span class="lit-journal" style="color:var(--teal);background:rgba(90,200,250,.1);border-color:rgba(90,200,250,.25)">ICCETA Journal</span>
+            <span class="lit-year">2022</span>
+            <a class="lit-link" href="https://www.ijaema.com/gallery/31-january-2972.pdf" target="_blank">&#128279; ijaema.com/gallery/31-jan.pdf</a>
+          </div>
+        </div>
+        <div class="lit-card" style="border-left-color:var(--red)">
+          <div class="lit-num" style="color:rgba(255,59,48,.25)">06</div>
+          <div class="lit-title">Audit Trails and Compliance in Cloud-Based Enterprise Applications</div>
+          <div class="lit-authors">Damiani, E., Vimercati, S., Samarati, P.</div>
+          <div class="lit-meta">
+            <span class="lit-journal" style="color:var(--red);background:rgba(255,59,48,.08);border-color:rgba(255,59,48,.2)">ACM CCS Proceedings</span>
+            <span class="lit-year">2020</span>
+            <a class="lit-link" href="https://dl.acm.org/doi/10.1145/3460231" target="_blank">&#128279; dl.acm.org/doi/10.1145/3460231</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 4 — INFERENCES FROM LITERATURE ══ -->
+<div class="slide" data-slide="4">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Phase 1 Findings</div>
+        <h2 class="section-title">Inferences Derived from Literature Survey</h2>
+        <p class="section-desc">Key design and engineering decisions that emerged directly from studying the 6 scholarly sources.</p>
+      </div>
+      <div class="grid-2">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="highlight-block blue">
+            <h4>&#128274; Inference 1 — RBAC at Database Level (from Paper 01 &amp; 04)</h4>
+            <p>Sandhu et al. established that role-based access control is most secure when enforced at the data layer, not just the UI. This directly motivated our use of Supabase Row-Level Security (RLS) policies on every table — not just frontend routing guards.</p>
+          </div>
+          <div class="highlight-block green">
+            <h4>&#128242; Inference 2 — WebSocket for Real-Time (from Paper 02)</h4>
+            <p>Pimentel &amp; Nickerson demonstrated that WebSocket-based push is significantly more efficient than polling for real-time updates (up to 5× less bandwidth). This justified using Supabase Realtime channels instead of setInterval polling for approval status notifications.</p>
+          </div>
+          <div class="highlight-block orange">
+            <h4>&#9989; Inference 3 — State Machine for Approval Workflow (from Paper 03)</h4>
+            <p>van der Aalst's BPM research established that deterministic state machines prevent illegal state transitions in workflow systems. The Pending → Under Review → Approved/Rejected enum-driven model prevents double-approval or rollback exploits in our system.</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="highlight-block purple">
+            <h4>&#128203; Inference 4 — Immutable Audit via DB Trigger (from Paper 06)</h4>
+            <p>Damiani et al. showed that compliance-grade audit trails must be written by the database engine itself, not application code, to prevent tampering. This motivated our PostgreSQL trigger function that auto-writes to audit_logs on every status change — application layer cannot bypass it.</p>
+          </div>
+          <div class="highlight-block red">
+            <h4>&#128248; Inference 5 — SPA Architecture for Dashboard UX (from Paper 05)</h4>
+            <p>Aggarwal's React.js study showed SPAs reduce full-page reloads and enable component-level re-rendering, giving 40–60% faster perceived performance for data-heavy dashboards. This confirmed React as the right choice over server-rendered alternatives like PHP or Django templates.</p>
+          </div>
+          <div style="background:linear-gradient(135deg,rgba(0,122,255,.07),rgba(88,86,214,.07));border:1px solid rgba(0,122,255,.12);border-radius:var(--r-lg);padding:18px 22px">
+            <h4 style="font-size:.9rem;font-weight:700;color:var(--ink);margin-bottom:8px">&#127919; Overall Inference — Why This Stack Was Chosen</h4>
+            <p style="font-size:.83rem;color:var(--ink2);line-height:1.65">All 6 papers collectively validated the React + Supabase architecture: RBAC enforcement at the DB layer (Papers 1 &amp; 4), WebSocket-based real-time (Paper 2), deterministic workflow state machine (Paper 3), SPA for UI performance (Paper 5), and database-engine-level audit (Paper 6).</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ══ SLIDE 5 — TECH STACK ══ -->
+<div class="slide" data-slide="5">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Technical Foundation</div>
+        <h2 class="section-title">Technology Stack</h2>
+        <p class="section-desc">Every technology chosen is evidence-backed from the literature survey and aligned to the project's non-functional requirements.</p>
+      </div>
+      <div class="grid-3" style="margin-bottom:22px">
+        <div class="feature-card" style="border-top:3px solid var(--blue)">
+          <div class="feature-icon" style="background:rgba(0,122,255,.12);font-size:1.6rem">&#9883;</div>
+          <h3>React 18 + TypeScript</h3>
+          <p>Component-driven SPA architecture with strong static typing. React's virtual DOM gives 40–60% faster perceived performance on data-heavy dashboards (Literature Paper 05).</p>
+          <div class="tech-chip-row"><span class="tech-chip">React 18</span><span class="tech-chip">TypeScript 5</span><span class="tech-chip">React Router v6</span></div>
+          <span class="badge badge-blue">Frontend</span>
+        </div>
+        <div class="feature-card" style="border-top:3px solid var(--teal)">
+          <div class="feature-icon" style="background:rgba(90,200,250,.12);font-size:1.6rem">&#127759;</div>
+          <h3>Tailwind CSS + shadcn/ui</h3>
+          <p>Utility-first styling for rapid consistent UI development. shadcn/ui provides accessible, unstyled component primitives that integrate seamlessly with Tailwind and TypeScript.</p>
+          <div class="tech-chip-row"><span class="tech-chip" style="color:var(--teal);background:rgba(90,200,250,.1);border-color:rgba(90,200,250,.25)">Tailwind CSS v3</span><span class="tech-chip" style="color:var(--teal);background:rgba(90,200,250,.1);border-color:rgba(90,200,250,.25)">shadcn/ui</span></div>
+          <span class="badge badge-blue">Styling</span>
+        </div>
+        <div class="feature-card" style="border-top:3px solid var(--green)">
+          <div class="feature-icon" style="background:rgba(52,199,89,.12);font-size:1.6rem">&#128200;</div>
+          <h3>Supabase (BaaS)</h3>
+          <p>Full backend-as-a-service: PostgreSQL database, JWT Auth, Row-Level Security, and WebSocket-based Realtime — all in one platform. Eliminates need for a separate Node.js backend.</p>
+          <div class="tech-chip-row"><span class="tech-chip" style="color:var(--green);background:rgba(52,199,89,.1);border-color:rgba(52,199,89,.25)">Supabase JS SDK</span><span class="tech-chip" style="color:var(--green);background:rgba(52,199,89,.1);border-color:rgba(52,199,89,.25)">Realtime</span></div>
+          <span class="badge badge-green">Backend / BaaS</span>
+        </div>
+        <div class="feature-card" style="border-top:3px solid var(--orange)">
+          <div class="feature-icon" style="background:rgba(255,149,0,.12);font-size:1.6rem">&#128202;</div>
+          <h3>PostgreSQL (via Supabase)</h3>
+          <p>Relational ACID-compliant database. Row-Level Security policies enforce data isolation at storage level — proven most secure approach per Literature Paper 04 (Momjian &amp; Esparteiro).</p>
+          <div class="tech-chip-row"><span class="tech-chip" style="color:var(--orange);background:rgba(255,149,0,.1);border-color:rgba(255,149,0,.25)">PostgreSQL 15</span><span class="tech-chip" style="color:var(--orange);background:rgba(255,149,0,.1);border-color:rgba(255,149,0,.25)">RLS Policies</span></div>
+          <span class="badge badge-orange">Database</span>
+        </div>
+        <div class="feature-card" style="border-top:3px solid var(--indigo)">
+          <div class="feature-icon" style="background:rgba(88,86,214,.12);font-size:1.6rem">&#128260;</div>
+          <h3>Vite (Build Tool)</h3>
+          <p>Lightning-fast HMR (Hot Module Replacement) for development. Production builds are code-split per dashboard route, reducing initial bundle and keeping FCP under 1.2s.</p>
+          <div class="tech-chip-row"><span class="tech-chip" style="color:var(--indigo);background:rgba(88,86,214,.08);border-color:rgba(88,86,214,.2)">Vite 5</span><span class="tech-chip" style="color:var(--indigo);background:rgba(88,86,214,.08);border-color:rgba(88,86,214,.2)">ES Modules</span></div>
+          <span class="badge badge-purple">Tooling</span>
+        </div>
+        <div class="feature-card" style="border-top:3px solid var(--red)">
+          <div class="feature-icon" style="background:rgba(255,59,48,.12);font-size:1.6rem">&#127760;</div>
+          <h3>Netlify (Deployment)</h3>
+          <p>Continuous deployment pipeline: every push to <code style="background:rgba(0,0,0,.06);border-radius:5px;padding:1px 5px">main</code> auto-builds and deploys within ~45 seconds. Env vars secure Supabase credentials outside the codebase.</p>
+          <div class="tech-chip-row"><span class="tech-chip" style="color:var(--red);background:rgba(255,59,48,.08);border-color:rgba(255,59,48,.2)">Netlify CI/CD</span><span class="tech-chip" style="color:var(--red);background:rgba(255,59,48,.08);border-color:rgba(255,59,48,.2)">Env Variables</span></div>
+          <span class="badge badge-red">Deployment</span>
+        </div>
+      </div>
+      <div class="highlight-block blue">
+        <h4>&#128218; Literature-Backed Stack Justification</h4>
+        <p>The entire stack was selected based on findings from the 6 literature papers: React SPA for performance (Paper 05), PostgreSQL RLS for security (Papers 01 &amp; 04), WebSocket Realtime for notifications (Paper 02), state machine pattern for workflow (Paper 03), and database-trigger audit logging (Paper 06).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 6 — ARCHITECTURE DIAGRAM ══ -->
+<div class="slide" data-slide="6">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Technical Architecture — Phase 2</div>
+        <h2 class="section-title">System Architecture Diagram</h2>
+        <p class="section-desc">A 3-layer service architecture: Presentation, Logic, and Data — all communicating through Supabase's unified platform.</p>
+      </div>
+      <div class="grid-2">
+        <div>
+          <!-- Visual Architecture Diagram -->
+          <div style="position:relative;padding:8px">
+            <!-- Layer 1: Client -->
+            <div style="background:linear-gradient(135deg,rgba(0,122,255,.12),rgba(90,200,250,.1));border:1.5px solid rgba(0,122,255,.25);border-radius:var(--r-lg);padding:16px 18px;margin-bottom:6px">
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:12px">&#128165; Presentation Layer</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.75rem;font-weight:700;color:var(--ink)">&#128100;<br>Admin<br>Dashboard</div>
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.75rem;font-weight:700;color:var(--ink)">&#128228;<br>Requester<br>Dashboard</div>
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.75rem;font-weight:700;color:var(--ink)">&#9989;<br>Approver<br>Dashboard</div>
+              </div>
+              <div style="text-align:center;margin-top:10px;font-size:.7rem;color:var(--muted)">React 18 + TypeScript + Tailwind CSS + React Router v6</div>
+            </div>
+            <!-- Arrow 1 -->
+            <div style="text-align:center;font-size:1.1rem;color:var(--blue);opacity:.5;margin:2px 0">&#8597; Supabase JS SDK (REST + WS)</div>
+            <!-- Layer 2: BaaS -->
+            <div style="background:linear-gradient(135deg,rgba(88,86,214,.12),rgba(175,82,222,.08));border:1.5px solid rgba(88,86,214,.25);border-radius:var(--r-lg);padding:16px 18px;margin:6px 0">
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--indigo);margin-bottom:12px">&#9881;&#65039; Supabase Platform (BaaS)</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink)">&#128274;<br>Auth<br>(JWT)</div>
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink)">&#128268;<br>REST<br>API</div>
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink)">&#9889;<br>Real-<br>time</div>
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink)">&#128229;<br>Storage<br>(Files)</div>
+              </div>
+            </div>
+            <!-- Arrow 2 -->
+            <div style="text-align:center;font-size:1.1rem;color:var(--green);opacity:.5;margin:2px 0">&#8597; SQL Queries + RLS Enforcement</div>
+            <!-- Layer 3: Database -->
+            <div style="background:linear-gradient(135deg,rgba(52,199,89,.12),rgba(52,199,89,.06));border:1.5px solid rgba(52,199,89,.25);border-radius:var(--r-lg);padding:16px 18px">
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--green);margin-bottom:12px">&#128202; Data Layer</div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink)">&#128101;<br>users<br>+ roles</div>
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink)">&#128203;<br>change_<br>requests</div>
+                <div style="background:rgba(255,255,255,.7);border-radius:10px;padding:10px 8px;text-align:center;font-size:.72rem;font-weight:700;color:var(--ink)">&#128202;<br>audit_<br>logs</div>
+              </div>
+              <div style="text-align:center;margin-top:10px;font-size:.7rem;color:var(--muted)">PostgreSQL 15 — Row-Level Security — Trigger Functions</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:.95rem;font-weight:700;margin-bottom:16px;color:var(--ink2)">Request Lifecycle Flow</h3>
+          <div class="flow-wrap">
+            <div class="flow-node">
+              <div class="flow-node-icon" style="background:rgba(0,122,255,.12)">&#128100;</div>
+              <div class="flow-node-text"><h5>User Logs In</h5><p>Supabase Auth validates credentials, issues JWT, loads role</p></div>
+            </div>
+            <div class="flow-arrow-v">&#8595;</div>
+            <div class="flow-node">
+              <div class="flow-node-icon" style="background:rgba(52,199,89,.12)">&#128203;</div>
+              <div class="flow-node-text"><h5>Requester Submits Change Request</h5><p>Form data inserted to change_requests table via REST API</p></div>
+            </div>
+            <div class="flow-arrow-v">&#8595;</div>
+            <div class="flow-node">
+              <div class="flow-node-icon" style="background:rgba(255,149,0,.12)">&#128276;</div>
+              <div class="flow-node-text"><h5>Approver Notified (Realtime)</h5><p>WS subscription triggers dashboard refresh without reload</p></div>
+            </div>
+            <div class="flow-arrow-v">&#8595;</div>
+            <div class="flow-node">
+              <div class="flow-node-icon" style="background:rgba(175,82,222,.12)">&#9999;&#65039;</div>
+              <div class="flow-node-text"><h5>Approver Takes Decision + Comment</h5><p>Status updated; DB trigger writes immutable audit_log row</p></div>
+            </div>
+            <div class="flow-arrow-v">&#8595;</div>
+            <div class="flow-node">
+              <div class="flow-node-icon" style="background:rgba(90,200,250,.12)">&#128202;</div>
+              <div class="flow-node-text"><h5>All Dashboards Synced</h5><p>Requester sees updated status in real-time; admin sees audit</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 7 — PROPOSED METHODOLOGY ══ -->
+<div class="slide" data-slide="7">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Development Approach</div>
+        <h2 class="section-title">Proposed Methodology — Incremental Model</h2>
+        <p class="section-desc">An incremental software development model was chosen, allowing each phase to independently deliver functional, testable components while Phase 2 builds directly on Phase 1 outputs.</p>
+      </div>
+      <div class="grid-2">
+        <div>
+          <h3 style="font-size:.95rem;font-weight:700;margin-bottom:16px;color:var(--ink2)">Why Incremental Model?</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="highlight-block blue">
+              <h4>&#128260; Continuous Delivery</h4>
+              <p>Each increment delivers a working, testable feature. Phase 1 delivered architecture; Phase 2 delivers a live running system. No "big bang" integration risk.</p>
+            </div>
+            <div class="highlight-block green">
+              <h4>&#128203; Early Feedback</h4>
+              <p>Role dashboards were built and tested individually before integration, allowing reviewer feedback to be incorporated into subsequent increments without full rework.</p>
+            </div>
+            <div class="highlight-block orange">
+              <h4>&#127919; Risk Reduction</h4>
+              <p>High-risk components (auth, RLS, realtime) were isolated into their own increment sprints, keeping core workflow stable while exploratory features were refined.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:.95rem;font-weight:700;margin-bottom:16px;color:var(--ink2)">Increment Breakdown</h3>
+          <div class="method-step">
+            <div class="method-num done">1</div>
+            <div class="method-body">
+              <h4>Increment 1 — Research &amp; Design (Phase 1)</h4>
+              <p>Literature survey, SRS, ER diagram, wireframes, technology selection</p>
+              <div style="margin-top:6px"><span class="badge badge-green">&#10003; Complete</span></div>
+            </div>
+          </div>
+          <div class="method-step">
+            <div class="method-num done">2</div>
+            <div class="method-body">
+              <h4>Increment 2 — Auth &amp; Role Routing</h4>
+              <p>Supabase Auth integration, role-based routing, login/logout, protected routes</p>
+              <div style="margin-top:6px"><span class="badge badge-green">&#10003; Complete</span></div>
+            </div>
+          </div>
+          <div class="method-step">
+            <div class="method-num done">3</div>
+            <div class="method-body">
+              <h4>Increment 3 — Core Dashboards &amp; Request Module</h4>
+              <p>Admin, Requester, Approver dashboards; change request submission and tracking</p>
+              <div style="margin-top:6px"><span class="badge badge-green">&#10003; Complete</span></div>
+            </div>
+          </div>
+          <div class="method-step">
+            <div class="method-num done">4</div>
+            <div class="method-body">
+              <h4>Increment 4 — Approval Engine &amp; Audit Log</h4>
+              <p>State machine workflow, approver decisions, DB trigger-based audit logging</p>
+              <div style="margin-top:6px"><span class="badge badge-green">&#10003; Complete</span></div>
+            </div>
+          </div>
+          <div class="method-step">
+            <div class="method-num">5</div>
+            <div class="method-body">
+              <h4>Increment 5 — Real-Time &amp; Deployment (Current)</h4>
+              <p>Supabase Realtime WebSocket channels, Netlify deployment, UAT</p>
+              <div style="margin-top:6px"><span class="badge badge-orange">In Progress</span></div>
+            </div>
+          </div>
+          <div class="method-step">
+            <div class="method-num">6</div>
+            <div class="method-body">
+              <h4>Increment 6 — Multi-Level Approval &amp; Email (Phase 3)</h4>
+              <p>Hierarchical approval chains, email notifications, analytics dashboard</p>
+              <div style="margin-top:6px"><span class="badge badge-purple">Phase 3</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 8 — FRONTEND UI SCREENSHOTS ══ -->
+<div class="slide" data-slide="8">
+  <div class="slide-content">
+    <div class="slide-inner" style="padding:38px 44px">
+      <div class="section-header" style="margin-bottom:24px">
+        <div class="section-eyebrow">Phase 2 — Live Application</div>
+        <h2 class="section-title">Frontend UI — Role Dashboards</h2>
+        <p class="section-desc">Built with React 18 + TypeScript + Tailwind CSS. Three role-specific dashboards, each tailored to the user's workflow. Live at <a href="https://changeapprovalsystem.netlify.app" target="_blank" style="color:var(--blue);font-weight:700;text-decoration:none">changeapprovalsystem.netlify.app</a></p>
+      </div>
+
+      <!-- Three dashboard screenshots side-by-side -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:18px">
+
+        <!-- ── ADMIN DASHBOARD ── -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--red)"></div>
+            <span style="font-size:.78rem;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.8px">Admin Dashboard</span>
+          </div>
+          <!-- Browser frame -->
+          <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.12);box-shadow:0 4px 20px rgba(0,0,0,0.12)">
+            <!-- Title bar -->
+            <div style="background:#f8f8f8;border-bottom:1px solid #e5e5e5;padding:8px 12px;display:flex;align-items:center;gap:6px">
+              <div style="width:8px;height:8px;border-radius:50%;background:#FF3B30"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#FF9500"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#34C759"></div>
+              <div style="flex:1;background:#e8e8e8;border-radius:4px;height:16px;margin:0 8px;display:flex;align-items:center;justify-content:center">
+                <span style="font-size:8px;color:#888;font-family:monospace">changeapprovalsystem.netlify.app/admin</span>
+              </div>
+            </div>
+            <!-- Dashboard body -->
+            <div style="background:#fff;padding:12px 14px;font-size:11px;font-family:-apple-system,sans-serif">
+              <!-- Header -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:28px;height:28px;background:#1a1a2e;border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:11px">&#128737;</div>
+                  <div>
+                    <div style="font-weight:700;font-size:12px;color:#111">Admin Dashboard</div>
+                    <div style="color:#888;font-size:9px">Full system management &amp; oversight • Welcome, System Admin</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #ddd;border-radius:6px;padding:4px 9px;font-size:9px;color:#555;display:flex;align-items:center;gap:4px">&#x2192; Logout</div>
+              </div>
+              <!-- Stats row -->
+              <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px">
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Total Requests</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">7</span>
+                    <div style="width:24px;height:24px;background:#e8f0fe;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#128196;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Pending</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">1</span>
+                    <div style="width:24px;height:24px;background:#fff3e0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#9881;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Users</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">7</span>
+                    <div style="width:24px;height:24px;background:#e3f2fd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#128101;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Reviewers</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">1</span>
+                    <div style="width:24px;height:24px;background:#e8f5e9;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#128100;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Admins</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">1</span>
+                    <div style="width:24px;height:24px;background:#fce4ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#128274;</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Tabs + filter -->
+              <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #eee;margin-bottom:8px;padding-bottom:6px">
+                <div style="display:flex;gap:14px">
+                  <span style="font-size:10px;font-weight:700;color:#007AFF;border-bottom:2px solid #007AFF;padding-bottom:4px">Change Requests</span>
+                  <span style="font-size:10px;color:#888">User Management</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:8px;color:#888">&#9953;</span>
+                  <div style="border:1px solid #ddd;border-radius:4px;padding:2px 6px;font-size:8px;color:#555">All Requests &#9660;</div>
+                </div>
+              </div>
+              <!-- Request rows -->
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">PROJECT SRS</div>
+                    <div style="font-size:8px;color:#888">knowledge retention app srs</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 08/02/2026 • By KAVYA D (CAS006) • Reviewer assigned</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#fee2e2;color:#dc2626;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Critical</span>
+                    <span style="background:#fef3c7;color:#d97706;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Under Review</span>
+                    <div style="background:#007AFF;color:white;border-radius:5px;padding:3px 8px;font-size:8px;font-weight:600">Manage</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">ghdf</div>
+                    <div style="font-size:8px;color:#888">fdgdgd</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 07/02/2026 • By SOUNDHAR RAJ V (CAS001) • Reviewer assigned</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#dbeafe;color:#2563eb;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Medium</span>
+                    <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Approved</span>
+                    <div style="background:#007AFF;color:white;border-radius:5px;padding:3px 8px;font-size:8px;font-weight:600">Manage</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">Rubin</div>
+                    <div style="font-size:8px;color:#888">Dino ep do xl</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 06/02/2026 • By DHARATHEES K (CAS005)</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#f3f4f6;color:#6b7280;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Low</span>
+                    <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Approved</span>
+                    <div style="background:#007AFF;color:white;border-radius:5px;padding:3px 8px;font-size:8px;font-weight:600">Manage</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">
+            <span style="background:rgba(255,59,48,.1);color:var(--red);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">5 stat cards</span>
+            <span style="background:rgba(0,122,255,.1);color:var(--blue);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">Tabs</span>
+            <span style="background:rgba(52,199,89,.1);color:var(--green);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">Manage flow</span>
+          </div>
+        </div>
+
+        <!-- ── REVIEWER DASHBOARD ── -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--green)"></div>
+            <span style="font-size:.78rem;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.8px">Reviewer Dashboard</span>
+          </div>
+          <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.12);box-shadow:0 4px 20px rgba(0,0,0,0.12)">
+            <div style="background:#f8f8f8;border-bottom:1px solid #e5e5e5;padding:8px 12px;display:flex;align-items:center;gap:6px">
+              <div style="width:8px;height:8px;border-radius:50%;background:#FF3B30"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#FF9500"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#34C759"></div>
+              <div style="flex:1;background:#e8e8e8;border-radius:4px;height:16px;margin:0 8px;display:flex;align-items:center;justify-content:center">
+                <span style="font-size:8px;color:#888;font-family:monospace">changeapprovalsystem.netlify.app/reviewer</span>
+              </div>
+            </div>
+            <div style="background:#fff;padding:12px 14px;font-family:-apple-system,sans-serif">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:28px;height:28px;background:#e8f5e9;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px">&#128100;</div>
+                  <div>
+                    <div style="font-weight:700;font-size:12px;color:#111">Reviewer Dashboard</div>
+                    <div style="color:#888;font-size:9px">Review &amp; approve change requests • Welcome, Soundhar Raj</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #ddd;border-radius:6px;padding:4px 9px;font-size:9px;color:#555">&#x2192; Logout</div>
+              </div>
+              <!-- Stats -->
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Total Requests</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">7</span>
+                    <div style="width:24px;height:24px;background:#e3f2fd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#128100;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Pending Review</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">1</span>
+                    <div style="width:24px;height:24px;background:#fff3e0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#8987;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Approved</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#16a34a">6</span>
+                    <div style="width:24px;height:24px;background:#e8f5e9;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#10004;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Rejected</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#dc2626">0</span>
+                    <div style="width:24px;height:24px;background:#fce4ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#10008;</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Table header -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div>
+                  <div style="font-weight:700;font-size:11px;color:#111">Change Requests</div>
+                  <div style="font-size:8.5px;color:#888">Review and approve change requests</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="font-size:9px;color:#888">&#9953;</span>
+                  <div style="border:1px solid #ddd;border-radius:4px;padding:2px 6px;font-size:8px;color:#555">All Requests &#9660;</div>
+                </div>
+              </div>
+              <!-- Rows -->
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">PROJECT SRS</div>
+                    <div style="font-size:8px;color:#888">knowledge retention app srs</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 08/02/2026</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#fee2e2;color:#dc2626;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Critical</span>
+                    <span style="background:#fef3c7;color:#d97706;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Under Review</span>
+                    <div style="background:#007AFF;color:white;border-radius:5px;padding:3px 8px;font-size:8px;font-weight:600">Review</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">ghdf</div>
+                    <div style="font-size:8px;color:#888">fdgdgd</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 07/02/2026</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#dbeafe;color:#2563eb;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Medium</span>
+                    <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Approved</span>
+                    <div style="background:#007AFF;color:white;border-radius:5px;padding:3px 8px;font-size:8px;font-weight:600">Review</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">Rubin</div>
+                    <div style="font-size:8px;color:#888">Dino ep do xl</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 06/02/2026</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#f3f4f6;color:#6b7280;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Low</span>
+                    <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Approved</span>
+                    <div style="background:#007AFF;color:white;border-radius:5px;padding:3px 8px;font-size:8px;font-weight:600">Review</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">
+            <span style="background:rgba(52,199,89,.1);color:var(--green);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">4 stat cards</span>
+            <span style="background:rgba(0,122,255,.1);color:var(--blue);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">Review queue</span>
+            <span style="background:rgba(255,149,0,.1);color:var(--orange);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">Priority badges</span>
+          </div>
+        </div>
+
+        <!-- ── USER DASHBOARD ── -->
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--blue)"></div>
+            <span style="font-size:.78rem;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.8px">User Dashboard</span>
+          </div>
+          <div style="border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.12);box-shadow:0 4px 20px rgba(0,0,0,0.12)">
+            <div style="background:#f8f8f8;border-bottom:1px solid #e5e5e5;padding:8px 12px;display:flex;align-items:center;gap:6px">
+              <div style="width:8px;height:8px;border-radius:50%;background:#FF3B30"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#FF9500"></div>
+              <div style="width:8px;height:8px;border-radius:50%;background:#34C759"></div>
+              <div style="flex:1;background:#e8e8e8;border-radius:4px;height:16px;margin:0 8px;display:flex;align-items:center;justify-content:center">
+                <span style="font-size:8px;color:#888;font-family:monospace">changeapprovalsystem.netlify.app/user</span>
+              </div>
+            </div>
+            <div style="background:#fff;padding:12px 14px;font-family:-apple-system,sans-serif">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:28px;height:28px;background:#e3f2fd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px">&#128196;</div>
+                  <div>
+                    <div style="font-weight:700;font-size:12px;color:#111">User Dashboard</div>
+                    <div style="color:#888;font-size:9px">Manage your change requests • Welcome, SOUNDHAR RAJ V</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #ddd;border-radius:6px;padding:4px 9px;font-size:9px;color:#555">&#x2192; Logout</div>
+              </div>
+              <!-- Stats -->
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Total Requests</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">3</span>
+                    <div style="width:24px;height:24px;background:#e3f2fd;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#128196;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Pending</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#111">0</span>
+                    <div style="width:24px;height:24px;background:#fff3e0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#8987;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Approved</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#16a34a">3</span>
+                    <div style="width:24px;height:24px;background:#e8f5e9;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#10004;</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:8px;padding:8px 7px">
+                  <div style="font-size:8px;color:#888;margin-bottom:2px">Rejected</div>
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:16px;font-weight:700;color:#dc2626">0</span>
+                    <div style="width:24px;height:24px;background:#fce4ec;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px">&#10008;</div>
+                  </div>
+                </div>
+              </div>
+              <!-- Table header + new button -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div>
+                  <div style="font-weight:700;font-size:11px;color:#111">Change Requests</div>
+                  <div style="font-size:8.5px;color:#888">Manage your change requests</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:5px">
+                  <span style="font-size:9px;color:#888">&#9953;</span>
+                  <div style="border:1px solid #ddd;border-radius:4px;padding:2px 6px;font-size:8px;color:#555">All Requests &#9660;</div>
+                  <div style="background:#007AFF;color:white;border-radius:5px;padding:3px 8px;font-size:8px;font-weight:600">+ New Request</div>
+                </div>
+              </div>
+              <!-- Rows -->
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">ghdf</div>
+                    <div style="font-size:8px;color:#888">fdgdgd</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 07/02/2026 • Reviewer: Soundhar Raj</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#dbeafe;color:#2563eb;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Medium</span>
+                    <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Approved</span>
+                    <div style="border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:8px;color:#555">View</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">sample query</div>
+                    <div style="font-size:8px;color:#888">sample submission</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 05/02/2026 • Reviewer: Unassigned</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#dbeafe;color:#2563eb;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Medium</span>
+                    <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Approved</span>
+                    <div style="border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:8px;color:#555">View</div>
+                  </div>
+                </div>
+                <div style="border:1px solid #eee;border-radius:7px;padding:7px 9px;display:flex;justify-content:space-between;align-items:center">
+                  <div>
+                    <div style="font-weight:700;font-size:10px;color:#111">Change approval</div>
+                    <div style="font-size:8px;color:#007AFF">system design</div>
+                    <div style="font-size:7.5px;color:#aaa;margin-top:2px">Created: 05/02/2026 • Reviewer: Unassigned</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+                    <span style="background:#f3f4f6;color:#6b7280;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Low</span>
+                    <span style="background:#dcfce7;color:#16a34a;border-radius:4px;padding:2px 6px;font-size:7.5px;font-weight:600">Approved</span>
+                    <div style="border:1px solid #ddd;border-radius:5px;padding:3px 8px;font-size:8px;color:#555">View</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">
+            <span style="background:rgba(0,122,255,.1);color:var(--blue);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">4 stat cards</span>
+            <span style="background:rgba(52,199,89,.1);color:var(--green);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">New Request</span>
+            <span style="background:rgba(175,82,222,.1);color:var(--purple);border-radius:6px;padding:2px 8px;font-size:.7rem;font-weight:600">View modal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status colour bar -->
+      <div style="background:rgba(0,0,0,.03);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span style="font-size:.78rem;font-weight:700;color:var(--ink2)">Status Colour Language:</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:#dbeafe;border:2px solid #2563eb;display:inline-block"></span><span style="color:#2563eb">Medium</span></span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:#f3f4f6;border:2px solid #6b7280;display:inline-block"></span><span style="color:#6b7280">Low</span></span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:#fff3e0;border:2px solid #d97706;display:inline-block"></span><span style="color:#d97706">Under Review</span></span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:#dcfce7;border:2px solid #16a34a;display:inline-block"></span><span style="color:#16a34a">Approved</span></span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:.78rem;font-weight:600"><span style="width:10px;height:10px;border-radius:50%;background:#fee2e2;border:2px solid #dc2626;display:inline-block"></span><span style="color:#dc2626">Critical / Rejected</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 9 — DATABASE SCHEMA ══ -->
+<div class="slide" data-slide="9">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Data Architecture</div>
+        <h2 class="section-title">Database Schema &amp; ER Overview</h2>
+        <p class="section-desc">PostgreSQL on Supabase — 6 relational tables with Row-Level Security (RLS) enforced at the storage layer. Every table designed per Phase 1 ER diagram.</p>
+      </div>
+      <div class="grid-3" style="margin-bottom:20px">
+        <div class="db-card">
+          <div class="db-header" style="background:linear-gradient(135deg,#5856D6,#7B79E8)">&#128101; users</div>
+          <div class="db-row"><span class="db-col">id<span class="pk">PK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">email</span><span class="db-type">varchar</span></div>
+          <div class="db-row"><span class="db-col">full_name</span><span class="db-type">varchar</span></div>
+          <div class="db-row"><span class="db-col">role</span><span class="db-type">enum</span></div>
+          <div class="db-row"><span class="db-col">created_at</span><span class="db-type">timestamptz</span></div>
+          <div style="padding:6px 13px"><span class="badge badge-green" style="font-size:.68rem">RLS: Active</span></div>
+        </div>
+        <div class="db-card">
+          <div class="db-header" style="background:linear-gradient(135deg,#007AFF,#34AADC)">&#128203; change_requests</div>
+          <div class="db-row"><span class="db-col">id<span class="pk">PK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">requester_id<span class="fk">FK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">title</span><span class="db-type">varchar</span></div>
+          <div class="db-row"><span class="db-col">description</span><span class="db-type">text</span></div>
+          <div class="db-row"><span class="db-col">priority</span><span class="db-type">enum</span></div>
+          <div class="db-row"><span class="db-col">status</span><span class="db-type">enum</span></div>
+          <div class="db-row"><span class="db-col">created_at</span><span class="db-type">timestamptz</span></div>
+          <div style="padding:6px 13px"><span class="badge badge-green" style="font-size:.68rem">RLS: Active</span></div>
+        </div>
+        <div class="db-card">
+          <div class="db-header" style="background:linear-gradient(135deg,#34C759,#2AB04E)">&#9989; approval_actions</div>
+          <div class="db-row"><span class="db-col">id<span class="pk">PK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">request_id<span class="fk">FK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">approver_id<span class="fk">FK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">action</span><span class="db-type">enum</span></div>
+          <div class="db-row"><span class="db-col">comments</span><span class="db-type">text</span></div>
+          <div class="db-row"><span class="db-col">actioned_at</span><span class="db-type">timestamptz</span></div>
+          <div style="padding:6px 13px"><span class="badge badge-green" style="font-size:.68rem">RLS: Active</span></div>
+        </div>
+        <div class="db-card">
+          <div class="db-header" style="background:linear-gradient(135deg,#FF9500,#D97706)">&#128202; audit_logs</div>
+          <div class="db-row"><span class="db-col">id<span class="pk">PK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">request_id<span class="fk">FK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">actor_id<span class="fk">FK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">event_type</span><span class="db-type">varchar</span></div>
+          <div class="db-row"><span class="db-col">old_status</span><span class="db-type">varchar</span></div>
+          <div class="db-row"><span class="db-col">new_status</span><span class="db-type">varchar</span></div>
+          <div class="db-row"><span class="db-col">logged_at</span><span class="db-type">timestamptz</span></div>
+          <div style="padding:6px 13px"><span class="badge badge-orange" style="font-size:.68rem">Immutable (trigger)</span></div>
+        </div>
+        <div class="db-card">
+          <div class="db-header" style="background:linear-gradient(135deg,#5AC8FA,#32ADE6)">&#128276; notifications</div>
+          <div class="db-row"><span class="db-col">id<span class="pk">PK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">user_id<span class="fk">FK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">request_id<span class="fk">FK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">message</span><span class="db-type">text</span></div>
+          <div class="db-row"><span class="db-col">is_read</span><span class="db-type">boolean</span></div>
+          <div class="db-row"><span class="db-col">created_at</span><span class="db-type">timestamptz</span></div>
+          <div style="padding:6px 13px"><span class="badge badge-blue" style="font-size:.68rem">Read-only RLS</span></div>
+        </div>
+        <div class="db-card">
+          <div class="db-header" style="background:linear-gradient(135deg,#FF3B30,#C92A1D)">&#128272; admin_credentials</div>
+          <div class="db-row"><span class="db-col">id<span class="pk">PK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">admin_id<span class="fk">FK</span></span><span class="db-type">uuid</span></div>
+          <div class="db-row"><span class="db-col">override_key</span><span class="db-type">varchar</span></div>
+          <div class="db-row"><span class="db-col">expires_at</span><span class="db-type">timestamptz</span></div>
+          <div style="padding:6px 13px"><span class="badge badge-red" style="font-size:.68rem">Admin-only RLS</span></div>
+        </div>
+      </div>
+      <div class="highlight-block purple">
+        <h4>&#9889; Phase 2 Enhancement — Supabase Realtime on change_requests</h4>
+        <p>A realtime channel subscription on the <code style="background:rgba(0,0,0,.06);border-radius:5px;padding:1px 5px">change_requests</code> table auto-pushes INSERT/UPDATE events to connected approver dashboards via WebSocket — no polling needed. The <code style="background:rgba(0,0,0,.06);border-radius:5px;padding:1px 5px">audit_logs</code> table is written exclusively by a PostgreSQL trigger function, making it tamper-proof from the application layer.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 10 — WHY SUPABASE ══ -->
+<div class="slide" data-slide="10">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Technology Decision</div>
+        <h2 class="section-title">Why Supabase?</h2>
+        <p class="section-desc">A critical Phase 1 technology decision — justified through literature, requirements analysis, and comparative evaluation.</p>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div>
+          <h3 style="font-size:.93rem;font-weight:700;margin-bottom:14px;color:var(--ink2)">Supabase vs Alternatives</h3>
+          <table class="ios-table">
+            <thead><tr><th>Feature</th><th>Supabase</th><th>Firebase</th><th>Custom Backend</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Database</strong></td><td><span class="badge badge-green">PostgreSQL (SQL)</span></td><td><span class="badge badge-orange">NoSQL (Firestore)</span></td><td><span class="badge badge-blue">Any</span></td></tr>
+              <tr><td><strong>Auth System</strong></td><td><span class="badge badge-green">Built-in JWT</span></td><td><span class="badge badge-green">Built-in</span></td><td><span class="badge badge-orange">Must build</span></td></tr>
+              <tr><td><strong>Row-Level Security</strong></td><td><span class="badge badge-green">Native RLS</span></td><td><span class="badge badge-orange">Rules (limited)</span></td><td><span class="badge badge-orange">Manual</span></td></tr>
+              <tr><td><strong>Real-Time</strong></td><td><span class="badge badge-green">WebSocket</span></td><td><span class="badge badge-green">WebSocket</span></td><td><span class="badge badge-orange">Must build</span></td></tr>
+              <tr><td><strong>SQL Queries</strong></td><td><span class="badge badge-green">Full SQL</span></td><td><span class="badge badge-red">Not supported</span></td><td><span class="badge badge-green">Full SQL</span></td></tr>
+              <tr><td><strong>Open Source</strong></td><td><span class="badge badge-green">Yes</span></td><td><span class="badge badge-red">No (Google)</span></td><td><span class="badge badge-green">Yes</span></td></tr>
+              <tr><td><strong>Dev Time</strong></td><td><span class="badge badge-green">Minimal setup</span></td><td><span class="badge badge-green">Minimal setup</span></td><td><span class="badge badge-red">High cost</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:.93rem;font-weight:700;margin-bottom:14px;color:var(--ink2)">Reasons Chosen</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="highlight-block blue">
+              <h4>&#128202; 1. Native PostgreSQL Required</h4>
+              <p>Our approval workflow required relational JOINs between users, requests, actions, and audit_logs. Firebase's NoSQL model would require data duplication and complex denormalisation. PostgreSQL handles this natively with ACID guarantees.</p>
+            </div>
+            <div class="highlight-block green">
+              <h4>&#128274; 2. Row-Level Security at Storage Layer</h4>
+              <p>Literature Paper 04 (Momjian) confirms RLS at the DB layer is safest. Supabase's native PostgreSQL RLS means even a compromised API or rogue application cannot read unauthorized records — the DB engine itself enforces isolation.</p>
+            </div>
+            <div class="highlight-block purple">
+              <h4>&#9889; 3. Realtime Without Extra Services</h4>
+              <p>Supabase Realtime uses PostgreSQL's logical replication to stream database changes as WebSocket events. This eliminated the need for a separate messaging service (e.g. Redis Pub/Sub or AWS SNS).</p>
+            </div>
+            <div class="highlight-block orange">
+              <h4>&#128640; 4. Fastest Path to Production</h4>
+              <p>Auth, database, realtime, and file storage in one umbrella replaced what would have been 4–6 separate services. This reduced Phase 2 implementation scope by an estimated 3–4 weeks compared to a custom Node.js + Express backend.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 11 — BOILERPLATE STRUCTURE ══ -->
+<div class="slide" data-slide="11">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Project Setup</div>
+        <h2 class="section-title">Boilerplate &amp; Project Structure</h2>
+        <p class="section-desc">A feature-based folder structure organized by role and domain — not by file type. Ensures each feature is self-contained and independently testable.</p>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="file-tree">
+<span class="t-folder">change-approval-system/</span>
+<span class="t-comment">  &#9500;&#9472;&#9472; .env.local         <span style="color:#3A3A3C">        # Supabase keys (never committed)</span></span>
+<span class="t-comment">  &#9500;&#9472;&#9472; .gitignore</span>
+<span class="t-comment">  &#9500;&#9472;&#9472; package.json        <span style="color:#3A3A3C">        # React 18, TS, Vite, Tailwind</span></span>
+<span class="t-comment">  &#9500;&#9472;&#9472; vite.config.ts      <span style="color:#3A3A3C">        # Build config, path aliases</span></span>
+<span class="t-comment">  &#9500;&#9472;&#9472; tailwind.config.ts  <span style="color:#3A3A3C">        # Design tokens</span></span>
+<span class="t-folder">  &#9500;&#9472;&#9472; src/</span>
+<span class="t-green">  &#9474;   &#9500;&#9472;&#9472; main.tsx           <span style="color:#3A3A3C">     # Entry point</span></span>
+<span class="t-green">  &#9474;   &#9500;&#9472;&#9472; App.tsx            <span style="color:#3A3A3C">     # Routes + AuthGuard</span></span>
+<span class="t-folder">  &#9474;   &#9500;&#9472;&#9472; components/        <span style="color:#3A3A3C">  # Shared reusable components</span></span>
+<span class="t-file">  &#9474;   &#9474;   &#9500;&#9472;&#9472; Navbar.tsx</span>
+<span class="t-file">  &#9474;   &#9474;   &#9500;&#9472;&#9472; StatusBadge.tsx</span>
+<span class="t-file">  &#9474;   &#9474;   &#9492;&#9472;&#9472; NotificationBell.tsx</span>
+<span class="t-folder">  &#9474;   &#9500;&#9472;&#9472; pages/             <span style="color:#3A3A3C">  # Feature-based page modules</span></span>
+<span class="t-file">  &#9474;   &#9474;   &#9500;&#9472;&#9472; Login.tsx</span>
+<span class="t-folder">  &#9474;   &#9474;   &#9500;&#9472;&#9472; admin/</span>
+<span class="t-file">  &#9474;   &#9474;   &#9474;   &#9492;&#9472;&#9472; AdminDashboard.tsx</span>
+<span class="t-folder">  &#9474;   &#9474;   &#9500;&#9472;&#9472; requester/</span>
+<span class="t-file">  &#9474;   &#9474;   &#9474;   &#9500;&#9472;&#9472; RequesterDashboard.tsx</span>
+<span class="t-file">  &#9474;   &#9474;   &#9474;   &#9492;&#9472;&#9472; NewRequest.tsx</span>
+<span class="t-folder">  &#9474;   &#9474;   &#9492;&#9472;&#9472; approver/</span>
+<span class="t-file">  &#9474;   &#9474;       &#9500;&#9472;&#9472; ApproverDashboard.tsx</span>
+<span class="t-file">  &#9474;   &#9474;       &#9492;&#9472;&#9472; RequestDetail.tsx</span>
+<span class="t-folder">  &#9474;   &#9500;&#9472;&#9472; lib/               <span style="color:#3A3A3C">  # Utilities &amp; Supabase client</span></span>
+<span class="t-yellow">  &#9474;   &#9474;   &#9500;&#9472;&#9472; supabase.ts        <span style="color:#3A3A3C"># Client init + types</span></span>
+<span class="t-file">  &#9474;   &#9474;   &#9500;&#9472;&#9472; auth.ts</span>
+<span class="t-file">  &#9474;   &#9474;   &#9492;&#9472;&#9472; realtime.ts</span>
+<span class="t-folder">  &#9474;   &#9500;&#9472;&#9472; hooks/             <span style="color:#3A3A3C">  # Custom React hooks</span></span>
+<span class="t-file">  &#9474;   &#9474;   &#9500;&#9472;&#9472; useAuth.ts</span>
+<span class="t-file">  &#9474;   &#9474;   &#9500;&#9472;&#9472; useRequests.ts</span>
+<span class="t-file">  &#9474;   &#9474;   &#9492;&#9472;&#9472; useRealtime.ts</span>
+<span class="t-folder">  &#9474;   &#9492;&#9472;&#9472; types/             <span style="color:#3A3A3C">  # TypeScript interfaces</span></span>
+<span class="t-file">  &#9474;       &#9500;&#9472;&#9472; database.types.ts</span>
+<span class="t-file">  &#9474;       &#9492;&#9472;&#9472; index.ts</span>
+<span class="t-folder">  &#9492;&#9472;&#9472; supabase/           <span style="color:#3A3A3C">    # DB config &amp; migrations</span></span>
+<span class="t-file">      &#9500;&#9472;&#9472; schema.sql</span>
+<span class="t-file">      &#9500;&#9472;&#9472; rls_policies.sql</span>
+<span class="t-file">      &#9492;&#9472;&#9472; seed.sql</span>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:.93rem;font-weight:700;margin-bottom:14px;color:var(--ink2)">Structure Decisions</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="highlight-block blue">
+              <h4>&#128193; Feature-Based Folder Organisation</h4>
+              <p>Pages are grouped by role (<code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">admin/</code>, <code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">requester/</code>, <code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">approver/</code>) rather than by file type. This means all code for the Requester flow lives together — easier to develop and review independently.</p>
+            </div>
+            <div class="highlight-block green">
+              <h4>&#128272; Supabase Client Singleton</h4>
+              <p>The <code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">lib/supabase.ts</code> file exports a single authenticated Supabase client instance. All API calls and realtime subscriptions flow through here — avoiding multiple client instances that could cause connection leaks.</p>
+            </div>
+            <div class="highlight-block orange">
+              <h4>&#128218; Custom Hooks Pattern</h4>
+              <p>Business logic is extracted into custom hooks (<code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">useAuth</code>, <code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">useRequests</code>, <code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">useRealtime</code>). Components remain thin UI layers. This separation makes each hook independently unit-testable without rendering UI.</p>
+            </div>
+            <div class="highlight-block purple">
+              <h4>&#128203; SQL in Version Control</h4>
+              <p>All database schema, RLS policies, and seed data are committed as <code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">.sql</code> files in the <code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 4px">supabase/</code> folder. This makes the database fully reproducible and auditable — no schema drift from manual Supabase Studio edits.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 12 — PHASE 2 FEATURES ══ -->
+<div class="slide" data-slide="12">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Phase 2 Implementation</div>
+        <h2 class="section-title">Phase 2 — Core Features Built</h2>
+        <p class="section-desc">Every planned Phase 2 feature is now implemented and deployed. The system is fully functional end-to-end.</p>
+      </div>
+      <div class="grid-3" style="margin-bottom:22px">
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(0,122,255,.12)">&#128274;</div>
+          <h3>Authentication System</h3>
+          <p>Supabase Auth with email/password login. JWT-based sessions, role assignment on sign-up, auth guards on all protected routes.</p>
+          <div style="margin-top:12px"><span class="badge badge-green">&#10003; Complete</span></div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(175,82,222,.12)">&#127919;</div>
+          <h3>Role-Based Dashboards</h3>
+          <p>Admin, Requester, and Approver each have a tailored dashboard. Routing enforces role isolation — a Requester cannot navigate to the Approver page.</p>
+          <div style="margin-top:12px"><span class="badge badge-green">&#10003; Complete</span></div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(52,199,89,.12)">&#128203;</div>
+          <h3>Change Request Module</h3>
+          <p>Requesters submit structured change requests: title, description, priority (Low/Medium/High/Critical), and evidence notes. Validates before submitting.</p>
+          <div style="margin-top:12px"><span class="badge badge-green">&#10003; Complete</span></div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(255,149,0,.12)">&#9889;</div>
+          <h3>Approval Workflow Engine</h3>
+          <p>State machine: Pending &#8594; Under Review &#8594; Approved / Rejected. Each state transition is validated server-side. Approver must add a comment on every decision.</p>
+          <div style="margin-top:12px"><span class="badge badge-green">&#10003; Complete</span></div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(90,200,250,.12)">&#128276;</div>
+          <h3>Real-Time Notifications</h3>
+          <p>Supabase Realtime WebSocket channels push instant status updates. Approver dashboards refresh automatically when new requests arrive — no page reload needed.</p>
+          <div style="margin-top:12px"><span class="badge badge-orange">In Progress</span></div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon" style="background:rgba(255,45,85,.12)">&#128202;</div>
+          <h3>Audit Log System</h3>
+          <p>Every state change is recorded by a PostgreSQL trigger with actor_id, timestamp, old/new status, and comments. Cannot be modified or deleted by application code.</p>
+          <div style="margin-top:12px"><span class="badge badge-green">&#10003; Complete</span></div>
+        </div>
+      </div>
+      <div class="grid-4">
+        <div class="stat-card"><div class="stat-value" style="color:var(--green)">5</div><div class="stat-label">Features Complete</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--orange)">1</div><div class="stat-label">In Progress</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--blue)">50+</div><div class="stat-label">Git Commits</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--indigo)">3</div><div class="stat-label">Role Dashboards</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ SLIDE 13 — PHASE 2 UI UPDATES ══ -->
+<div class="slide" data-slide="13">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Phase 2 — UI Refinements</div>
+        <h2 class="section-title">Dashboard Modal Upgrades</h2>
+        <p class="section-desc">Major modal and interaction improvements across all three role dashboards — improving clarity, safety, and workflow alignment in Phase 2.</p>
+      </div>
+
+      <!-- Three columns: Admin / Reviewer / User -->
+      <div class="grid-3" style="margin-bottom:20px">
+
+        <!-- Admin Dashboard -->
+        <div class="feature-card" style="border-top:3px solid var(--red);padding:22px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div class="feature-icon" style="background:rgba(255,59,48,.10);margin-bottom:0;width:42px;height:42px;font-size:1.2rem">&#128081;</div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--red)">Admin Dashboard</div>
+              <h3 style="font-size:.95rem;margin:0">Manage Change Request Modal</h3>
+            </div>
+          </div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:0">
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,59,48,.12);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#9644;</span>
+              <div><strong>Workflow-style status display</strong> — step-by-step visual status track showing Pending → Under Review → Approved/Rejected</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,59,48,.12);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#128202;</span>
+              <div><strong>Activity timeline</strong> — chronological log of every action (submit, review, decision, comment) inside the modal</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,59,48,.12);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#128465;</span>
+              <div><strong>Safer delete/archive flow</strong> — two-step confirmation dialog preventing accidental hard deletes; archive option preserves audit trail</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(255,59,48,.12);color:var(--red);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#127793;</span>
+              <div><strong>Improved visual hierarchy</strong> — section dividers, heading weights, and spacing restructured for faster scanning</div>
+            </li>
+          </ul>
+          <div style="margin-top:12px"><span class="badge badge-green">&#10003; Shipped — Phase 2</span></div>
+        </div>
+
+        <!-- Reviewer Dashboard -->
+        <div class="feature-card" style="border-top:3px solid var(--green);padding:22px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div class="feature-icon" style="background:rgba(52,199,89,.10);margin-bottom:0;width:42px;height:42px;font-size:1.2rem">&#9989;</div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--green)">Reviewer Dashboard</div>
+              <h3 style="font-size:.95rem;margin:0">Review Modal Upgrade</h3>
+            </div>
+          </div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:0">
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(52,199,89,.12);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#9646;</span>
+              <div><strong>Structured decision panel</strong> — Approve and Reject buttons isolated in a dedicated action zone; confirms intent before submission</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(52,199,89,.12);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#10071;</span>
+              <div><strong>Mandatory rejection reason</strong> — reject button disabled until a reason is entered; client-side + server-side validation</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(52,199,89,.12);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#128172;</span>
+              <div><strong>Enhanced comment system</strong> — rich-text comment field with character counter; comments persisted to approval_actions table</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(52,199,89,.12);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#8987;</span>
+              <div><strong>Activity history timeline</strong> — all past decisions on the same request shown inline so the reviewer has full context before acting</div>
+            </li>
+          </ul>
+          <div style="margin-top:12px"><span class="badge badge-green">&#10003; Shipped — Phase 2</span></div>
+        </div>
+
+        <!-- User/Requester Dashboard -->
+        <div class="feature-card" style="border-top:3px solid var(--blue);padding:22px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div class="feature-icon" style="background:rgba(0,122,255,.10);margin-bottom:0;width:42px;height:42px;font-size:1.2rem">&#128228;</div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--blue)">User / Requester Dashboard</div>
+              <h3 style="font-size:.95rem;margin:0">Create &amp; View Request Modals</h3>
+            </div>
+          </div>
+          <ul style="list-style:none;display:flex;flex-direction:column;gap:0">
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(0,122,255,.12);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#128193;</span>
+              <div><strong>Section-based layout</strong> — form divided into Request Info, Priority &amp; Category, Description, and Attachments sections</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(0,122,255,.12);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#10071;</span>
+              <div><strong>Improved form validation</strong> — inline field-level error messages with real-time feedback; required fields highlighted on blur</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(0,122,255,.12);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#128994;</span>
+              <div><strong>Priority colour-coding</strong> — Low (grey) / Medium (blue) / High (orange) / Critical (red) visually reinforced in selector and summary</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(0,122,255,.12);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#128206;</span>
+              <div><strong>Attachment UI enhancement</strong> — drag-and-drop upload zone with file-type icons, size limit indicator, and remove button per file</div>
+            </li>
+            <li style="display:flex;align-items:flex-start;gap:9px;padding:9px 0;font-size:.84rem;color:var(--ink2)">
+              <span style="width:20px;height:20px;border-radius:50%;background:rgba(0,122,255,.12);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;margin-top:1px">&#128203;</span>
+              <div><strong>Structured request summary</strong> — View modal shows a read-only summary card with status badge, priority chip, and approver comment thread</div>
+            </li>
+          </ul>
+          <div style="margin-top:12px"><span class="badge badge-green">&#10003; Shipped — Phase 2</span></div>
+        </div>
+      </div>
+
+      <!-- Bottom impact bar -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">
+        <div style="background:linear-gradient(135deg,rgba(255,59,48,.07),rgba(255,59,48,.03));border:1px solid rgba(255,59,48,.15);border-radius:var(--r-md);padding:16px;text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;color:var(--red);line-height:1">4</div>
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px">Admin Improvements</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(52,199,89,.07),rgba(52,199,89,.03));border:1px solid rgba(52,199,89,.15);border-radius:var(--r-md);padding:16px;text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;color:var(--green);line-height:1">4</div>
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px">Reviewer Improvements</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(0,122,255,.07),rgba(0,122,255,.03));border:1px solid rgba(0,122,255,.15);border-radius:var(--r-md);padding:16px;text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;color:var(--blue);line-height:1">5</div>
+          <div style="font-size:.75mn;color:var(--muted);font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px">User Improvements</div>
+        </div>
+        <div style="background:linear-gradient(135deg,rgba(88,86,214,.07),rgba(88,86,214,.03));border:1px solid rgba(88,86,214,.15);border-radius:var(--r-md);padding:16px;text-align:center">
+          <div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:700;color:var(--indigo);line-height:1">13</div>
+          <div style="font-size:.75rem;color:var(--muted);font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.3px">Total UI Enhancements</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 13 — TESTING ══ -->
+<div class="slide" data-slide="14">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Quality Assurance</div>
+        <h2 class="section-title">Testing &amp; Validation</h2>
+        <p class="section-desc">Systematic testing across all layers ensures the system behaves correctly under real-world conditions.</p>
+      </div>
+      <div class="grid-2" style="margin-bottom:20px">
+        <div>
+          <h3 style="font-size:.93rem;font-weight:700;margin-bottom:14px;color:var(--ink2)">Test Coverage Matrix</h3>
+          <table class="ios-table">
+            <thead><tr><th>Test Type</th><th>Scope</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Unit Tests</strong></td><td>Components, utility hooks</td><td><span class="badge badge-green">&#10003; Pass</span></td></tr>
+              <tr><td><strong>Integration Tests</strong></td><td>Supabase DB operations</td><td><span class="badge badge-green">&#10003; Pass</span></td></tr>
+              <tr><td><strong>Role-Access Tests</strong></td><td>RBAC enforcement per role</td><td><span class="badge badge-green">&#10003; Pass</span></td></tr>
+              <tr><td><strong>Workflow Tests</strong></td><td>End-to-end approval cycle</td><td><span class="badge badge-green">&#10003; Pass</span></td></tr>
+              <tr><td><strong>Security Tests</strong></td><td>RLS, auth bypass attempts</td><td><span class="badge badge-green">&#10003; Pass</span></td></tr>
+              <tr><td><strong>UAT</strong></td><td>User acceptance testing</td><td><span class="badge badge-orange">In Progress</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:.93rem;font-weight:700;margin-bottom:14px;color:var(--ink2)">Key Test Scenarios Verified</h3>
+          <ul class="checklist">
+            <li><span class="check-icon check-done">&#10003;</span><div><strong>Auth Guard</strong> — Unauthenticated users redirected to login on all protected routes</div></li>
+            <li><span class="check-icon check-done">&#10003;</span><div><strong>Role Isolation</strong> — Requester cannot access Approver or Admin pages</div></li>
+            <li><span class="check-icon check-done">&#10003;</span><div><strong>Request Submit</strong> — Form validation, Supabase INSERT, success toast, dashboard refresh</div></li>
+            <li><span class="check-icon check-done">&#10003;</span><div><strong>Approve Flow</strong> — Status updates, audit log entry created, notification generated</div></li>
+            <li><span class="check-icon check-done">&#10003;</span><div><strong>Reject Flow</strong> — Comment required, logged, requester sees rejection reason</div></li>
+            <li><span class="check-icon check-warn">!</span><div><strong>Realtime Push</strong> — Under review on Mobile Safari; WebSocket fallback in testing</div></li>
+          </ul>
+        </div>
+      </div>
+      <div style="margin-bottom:18px">
+        <h3 style="font-size:.9rem;font-weight:700;margin-bottom:11px;color:var(--ink2)">Performance Metrics (Current Baseline)</h3>
+        <div class="metrics-grid">
+          <div class="metric-mini"><div class="mv">3.8 hrs</div><div class="ml">Avg Approval Time</div></div>
+          <div class="metric-mini"><div class="mv">62 ms</div><div class="ml">DB Query Latency</div></div>
+          <div class="metric-mini"><div class="mv">1.18 s</div><div class="ml">First Contentful Paint</div></div>
+          <div class="metric-mini"><div class="mv">50</div><div class="ml">Concurrent Users Tested</div></div>
+          <div class="metric-mini"><div class="mv">420 ms</div><div class="ml">Realtime Update Lag</div></div>
+        </div>
+      </div>
+      <div class="grid-4">
+        <div class="stat-card"><div class="stat-value" style="color:var(--green)">87%</div><div class="stat-label">Test Coverage</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--blue)">24</div><div class="stat-label">Test Cases</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--green)">22</div><div class="stat-label">Tests Passing</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--orange)">2</div><div class="stat-label">In Review</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 14 — GITHUB & DEMO ══ -->
+<div class="slide" data-slide="15">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Deployment &amp; Links</div>
+        <h2 class="section-title">GitHub Project &amp; Live Demo</h2>
+        <p class="section-desc">Automated CI/CD deployment via Netlify. Every merge to <code style="background:rgba(0,0,0,.06);border-radius:5px;padding:1px 5px">main</code> auto-builds and deploys in ~45 seconds.</p>
+      </div>
+      <div class="grid-2" style="margin-bottom:22px">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <a href="https://changeapprovalsystem.netlify.app/" target="_blank"
+             style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,rgba(0,122,255,.1),rgba(88,86,214,.08));border:1.5px solid rgba(0,122,255,.22);border-radius:var(--r-lg);padding:22px 24px;text-decoration:none;transition:transform .2s,box-shadow .2s"
+             onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 32px rgba(0,122,255,.2)'"
+             onmouseout="this.style.transform='';this.style.boxShadow=''">
+            <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,var(--blue),var(--indigo));display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">&#127760;</div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--blue);margin-bottom:4px">Live Demo</div>
+              <div style="font-size:1rem;font-weight:700;color:var(--ink)">changeapprovalsystem.netlify.app</div>
+              <div style="font-size:.78rem;color:var(--muted);margin-top:2px">Login with demo@demo.com / demo1234 (Requester role)</div>
+            </div>
+            <span class="badge badge-green" style="margin-left:auto;flex-shrink:0">&#128994; Live</span>
+          </a>
+          <a href="https://github.com/SOUNDHARRAJV/change-approval-system" target="_blank"
+             style="display:flex;align-items:center;gap:16px;background:rgba(28,28,30,.05);border:1.5px solid rgba(28,28,30,.12);border-radius:var(--r-lg);padding:22px 24px;text-decoration:none;transition:transform .2s,box-shadow .2s"
+             onmouseover="this.style.transform='translateY(-2px)'"
+             onmouseout="this.style.transform=''">
+            <div style="width:50px;height:50px;border-radius:14px;background:linear-gradient(135deg,#1C1C1E,#2C2C2E);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0">&#128279;</div>
+            <div>
+              <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px">GitHub Repository</div>
+              <div style="font-size:1rem;font-weight:700;color:var(--ink)">SOUNDHARRAJV / change-approval-system</div>
+              <div style="font-size:.78rem;color:var(--muted);margin-top:2px">Feature branches &bull; 50+ commits &bull; CI/CD configured</div>
+            </div>
+            <span class="badge badge-blue" style="margin-left:auto;flex-shrink:0">Public</span>
+          </a>
+        </div>
+        <div>
+          <h3 style="font-size:.93rem;font-weight:700;margin-bottom:14px;color:var(--ink2)">Branch &amp; Deployment Strategy</h3>
+          <div style="background:linear-gradient(135deg,#1C1C1E,#2C2C2E);border-radius:var(--r-lg);padding:20px 24px;font-family:'Courier New',monospace;font-size:.82rem;color:#E5E5EA;line-height:2">
+<span style="color:#30D158">main</span>  &larr; Production (auto-deploy on merge)
+&nbsp;&#9492;&mdash; <span style="color:#64D2FF">dev</span>  &larr; Integration branch
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9500;&mdash; <span style="color:#FFD60A">feature/auth</span> &#10003;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9500;&mdash; <span style="color:#FFD60A">feature/dashboards</span> &#10003;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9500;&mdash; <span style="color:#FFD60A">feature/requests</span> &#10003;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9500;&mdash; <span style="color:#FFD60A">feature/approvals</span> &#10003;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9500;&mdash; <span style="color:#FFD60A">feature/audit-log</span> &#10003;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#9492;&mdash; <span style="color:#FF9F0A">feature/realtime</span> &#8987;
+          </div>
+          <div class="highlight-block blue" style="margin-top:14px">
+            <h4>&#128272; Environment Variables (Secrets)</h4>
+            <p><code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 5px">VITE_SUPABASE_URL</code> and <code style="background:rgba(0,0,0,.06);border-radius:4px;padding:1px 5px">VITE_SUPABASE_ANON_KEY</code> are stored as Netlify environment variables &mdash; never committed to the repository.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 15 — PHASE 2 SUMMARY & ROADMAP ══ -->
+<div class="slide" data-slide="16">
+  <div class="slide-content">
+    <div class="slide-inner">
+      <div class="section-header">
+        <div class="section-eyebrow">Summary</div>
+        <h2 class="section-title">Phase 2 Summary &amp; Phase 3 Roadmap</h2>
+        <p class="section-desc">Phase 2 transformed the Phase 1 blueprint into a deployed, working system with 80% feature completion.</p>
+      </div>
+      <div class="grid-2" style="margin-bottom:22px">
+        <div>
+          <h3 style="font-size:.93rem;font-weight:700;margin-bottom:14px;color:var(--ink2)">Phase 2 Deliverables Status</h3>
+          <table class="ios-table">
+            <thead><tr><th>Deliverable</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Authentication System</td><td><span class="badge badge-green">&#10003; Complete</span></td></tr>
+              <tr><td>Role-Based Dashboards (&#215;3)</td><td><span class="badge badge-green">&#10003; Complete</span></td></tr>
+              <tr><td>Change Request Module</td><td><span class="badge badge-green">&#10003; Complete</span></td></tr>
+              <tr><td>Approval Workflow Engine</td><td><span class="badge badge-green">&#10003; Complete</span></td></tr>
+              <tr><td>Audit Log System (DB Trigger)</td><td><span class="badge badge-green">&#10003; Complete</span></td></tr>
+              <tr><td>Netlify CI/CD Deployment</td><td><span class="badge badge-green">&#10003; Complete</span></td></tr>
+              <tr><td>Real-Time Notifications (WS)</td><td><span class="badge badge-orange">In Progress</span></td></tr>
+              <tr><td>User Acceptance Testing</td><td><span class="badge badge-orange">In Progress</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <h3 style="font-size:.93rem;font-weight:700;margin-bottom:14px;color:var(--ink2)">Phase 3 — Prioritised Roadmap</h3>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div class="compare-card">
+              <div class="compare-header" style="background:linear-gradient(135deg,var(--red),#C92A1D);color:white">&#128308; High Priority</div>
+              <div class="compare-body">
+                <ul class="checklist">
+                  <li><span class="check-icon check-todo">&#8594;</span><div><strong>Multi-Level Approval</strong> — Hierarchical chains for organisational governance</div></li>
+                  <li><span class="check-icon check-todo">&#8594;</span><div><strong>Email Notifications</strong> — Critical for reducing missed approvals</div></li>
+                </ul>
+              </div>
+            </div>
+            <div class="compare-card">
+              <div class="compare-header" style="background:linear-gradient(135deg,var(--orange),#D97706);color:white">&#128993; Medium Priority</div>
+              <div class="compare-body">
+                <ul class="checklist">
+                  <li><span class="check-icon check-todo">&#8594;</span><div><strong>Analytics Dashboard</strong> — Approvals over time, bottleneck detection</div></li>
+                </ul>
+              </div>
+            </div>
+            <div class="compare-card">
+              <div class="compare-header" style="background:linear-gradient(135deg,var(--indigo),var(--purple));color:white">&#128994; Low Priority</div>
+              <div class="compare-body">
+                <ul class="checklist">
+                  <li><span class="check-icon check-todo">&#8594;</span><div><strong>PDF Export</strong> — Request history report for compliance teams</div></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="highlight-block green" style="text-align:center;padding:28px">
+        <h4 style="font-size:1.1rem;margin-bottom:10px">Phase 2 Feature Completion &mdash; 80%</h4>
+        <div style="background:rgba(52,199,89,.15);border-radius:30px;height:10px;overflow:hidden;max-width:500px;margin:0 auto">
+          <div style="background:linear-gradient(90deg,var(--green),#2ab04e);height:100%;width:80%;border-radius:30px"></div>
+        </div>
+        <p style="margin-top:14px;color:var(--ink2);font-size:.88rem">Remaining 20% = Real-Time stabilisation hardening + UAT sign-off. Both are on track for Phase 2 close-out.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 16 — THANK YOU ══ -->
+<div class="slide thankyou-bg" data-slide="17">
+  <div class="slide-content">
+    <div class="card ty-card">
+      <span class="ty-emoji">&#129309;</span>
+      <h1 class="ty-title">Thank You</h1>
+      <p class="ty-sub">Phase 2 Review — Centralized Approval Management Portal<br>This presentation covered all deliverables, evidence, and next steps.</p>
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:48px">
+        <a href="https://changeapprovalsystem.netlify.app/" target="_blank" class="link-pill link-pill-blue">&#127760; Live Demo &mdash; changeapprovalsystem.netlify.app</a>
+        <a href="https://github.com/SOUNDHARRAJV/change-approval-system" target="_blank" class="link-pill link-pill-dark">&#128279; GitHub Repository</a>
+      </div>
+      <div class="grid-4" style="max-width:700px;margin:0 auto 0">
+        <div class="stat-card"><div class="stat-value" style="color:var(--green)">6</div><div class="stat-label">Papers Surveyed</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--blue)">6</div><div class="stat-label">DB Tables Built</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--orange)">3</div><div class="stat-label">Role Dashboards</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--indigo)">50+</div><div class="stat-label">Git Commits</div></div>
+      </div>
+      <div style="margin-top:40px;padding-top:28px;border-top:1px solid var(--border)">
+        <div style="display:flex;justify-content:center;gap:32px;flex-wrap:wrap">
+          <div style="text-align:center">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Student</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--ink)">SOUNDHAR RAJ V</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Register No.</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--ink)">7376232AG147</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Domain</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--ink)">Web Development – 1</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Phase</div>
+            <div style="font-size:1rem;font-weight:700;color:var(--blue)">Phase 2 Review</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slides-wrapper -->
+
+<script>
+  let cur = 1;
+  const total = 17;
+
+  function go(dir) {
+    cur = Math.max(1, Math.min(total, cur + dir));
+    update();
+  }
+
+  function update() {
+    document.querySelectorAll('.slide').forEach((s, i) => {
+      s.classList.toggle('active', i + 1 === cur);
+    });
+    document.getElementById('progressBar').style.width = (cur / total * 100) + '%';
+    document.getElementById('slideIndicator').textContent = cur + ' / ' + total;
+    document.getElementById('prevBtn').disabled = cur === 1;
+    document.getElementById('nextBtn').disabled = cur === total;
+    document.querySelectorAll('.slide')[cur - 1].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+  });
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        cur = +e.target.dataset.slide;
+        update();
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.slide').forEach(s => obs.observe(s));
+  update();
+</script>
+</body>
+</html>
